@@ -1,139 +1,143 @@
+using System;
+using System.Windows.Forms;
+
 namespace kalkulator
 {
+    public enum Operation
+    {
+        None,
+        Addition,
+        Subtraction,
+        Division,
+        Multiplication
+    }
+
     public partial class Form1 : Form
     {
+     private string _firstValue;
+     private string _secondValue;
+     private Operation _currentOperation = Operation.None;
+     private bool _isTheResultOnTheScreen;
+        
         public Form1()
         {
             InitializeComponent();
+            tbWynik.Text ="0";
         }
-        string LiczbaPIerwsza, LiczbaDruga;
-        char RodzajDzialania = ' ';
-        private void Form1_Load(object sender, EventArgs e)
+        private void OnBtnNumberClick(object sender, EventArgs e)
         {
-
-        }
-
-        private void bDodawanie_Click(object sender, EventArgs e)
-        {
-            RodzajDzialania = '+';
-            tbWynik.Text = "";
-        }
-
-        private void bOdejmowanie_Click(object sender, EventArgs e)
-        {
-            RodzajDzialania = '-';
-            tbWynik.Text = "";
-        }
-
-        private void bMnozenie_Click(object sender, EventArgs e)
-        {
-            RodzajDzialania = '*';
-            tbWynik.Text = "";
-        }
-
-        private void bDzielenie_Click(object sender, EventArgs e)
-        {
-            RodzajDzialania = '/';
-            tbWynik.Text = "";
-        }
-
-        private void bWynik_Click(object sender, EventArgs e)
-        {
-            switch(RodzajDzialania)
+            var clickedValue = (sender as Button).Text;
+            if (tbWynik.Text =="0" && clickedValue !=",")
+                tbWynik.Text = string.Empty;
+            if (_isTheResultOnTheScreen)
             {
-                case ('+'):
-                    tbWynik.Text = (int.Parse(LiczbaPIerwsza) + int.Parse(LiczbaDruga)).ToString();
-                    break;
-                    case ('-'):
-                    tbWynik.Text = (int.Parse(LiczbaPIerwsza) - int.Parse(LiczbaDruga)).ToString();
-                    break;
-                case ('*'):
-                    tbWynik.Text = (int.Parse(LiczbaPIerwsza) * int.Parse(LiczbaDruga)).ToString();
-                    break;
-                case ('/'):
-                    tbWynik.Text = (int.Parse(LiczbaPIerwsza) / int.Parse(LiczbaDruga)).ToString();
-                    break;
+                _isTheResultOnTheScreen = false;
+                tbWynik.Text = string.Empty;
+                if (clickedValue ==",")
+                    clickedValue ="0,";
             }
-            LiczbaPIerwsza = "";
-            LiczbaDruga = "";
-            RodzajDzialania = ' ';
-        }
-
-        private void b3_Click(object sender, EventArgs e)
-        {
-            Dzialanie(3);
-        }
-
-        private void b6_Click(object sender, EventArgs e)
-        {
-            Dzialanie(6);
-        }
-
-        private void b9_Click(object sender, EventArgs e)
-        {
-            Dzialanie(9);
-        }
-
-        private void b8_Click(object sender, EventArgs e)
-        {
-            Dzialanie(8);
-        }
-
-        private void b5_Click(object sender, EventArgs e)
-        {
-            Dzialanie(5);
-        }
-
-        private void b2_Click(object sender, EventArgs e)
-        {
-            Dzialanie(2);
-        }
-
-        private void bDEL_Click(object sender, EventArgs e)
-        {
-            if (RodzajDzialania == ' ' && LiczbaPIerwsza.Length > 0)
-            {
-                LiczbaPIerwsza = LiczbaPIerwsza.Remove(LiczbaPIerwsza.Length - 1);
-                tbWynik.Text = LiczbaPIerwsza;
-            }
-            else if (RodzajDzialania != ' ' && LiczbaDruga.Length > 0)
-            {
-                LiczbaDruga = LiczbaDruga.Remove(LiczbaDruga.Length - 1);
-                tbWynik.Text = LiczbaDruga;
-            }
-        }
-
-        private void b0_Click(object sender, EventArgs e)
-        {
-            Dzialanie(0);
-        }
-
-        private void b1_Click(object sender, EventArgs e)
-        {
-            Dzialanie(1);
-        }
-
-        private void b4_Click(object sender, EventArgs e)
-        {
-            Dzialanie(4);
-        }
-
-        private void b7_Click(object sender, EventArgs e)
-        {
-            Dzialanie(7);
-        }
-        private void Dzialanie(int liczba)
-        {
-            if (RodzajDzialania == ' ')
-            {
-                LiczbaPIerwsza += liczba;
-                tbWynik.Text = LiczbaPIerwsza;
-            }
+            tbWynik.Text += clickedValue;
+            
+            SetResultBtnState(true);
+            if (_currentOperation != Operation.None)
+           
+                _secondValue += clickedValue;
             else
-            {
-                LiczbaDruga += liczba;
-                tbWynik.Text = LiczbaDruga;
-            }
+                SetOperationBtnState(true);
         }
+
+        private void OnBtnOperationClick(object sender, EventArgs e)
+        {
+            _firstValue = tbWynik.Text;
+
+            var operation = (sender as Button).Text;
+
+
+            _currentOperation = operation switch
+            {
+                "+" => Operation.Addition,
+               "-" => Operation.Subtraction,
+                "/" => Operation.Division,
+                "*" => Operation.Multiplication,
+                _ => Operation.None,
+            };
+            tbWynik.Text += $" {operation} ";
+
+            if (_isTheResultOnTheScreen)
+                _isTheResultOnTheScreen = false;
+
+           
+            SetOperationBtnState(false);
+           
+            SetResultBtnState(false);
+        }
+
+      
+        private double Calculate(double firstNumber, double secondNumber)
+        {
+            switch (_currentOperation)
+            {
+                case Operation.None:
+                return firstNumber;
+                case Operation.Addition:
+                return firstNumber + secondNumber;
+                case Operation.Subtraction:
+                return firstNumber - secondNumber;
+                case Operation.Division:
+                    if (secondNumber == 0)
+                    {
+                        MessageBox.Show("Nie mo¿na dzieliæ przez 0!");
+                        return 0;
+                    }
+                    return firstNumber / secondNumber;
+                case Operation.Multiplication:
+                    return firstNumber * secondNumber;
+            }
+            return 0;
+        }
+        private void OnBtnResultClick(object sender, EventArgs e)
+        {
+            if (_currentOperation == Operation.None)
+                return;
+            var firstNumber = double.Parse(_firstValue);
+            var secondNumber = double.Parse(_secondValue);
+
+            var result = Calculate(firstNumber, secondNumber);
+
+            tbWynik.Text = result.ToString();
+            _secondValue = string.Empty;
+            _currentOperation = Operation.None;
+
+            _isTheResultOnTheScreen = true;
+            SetOperationBtnState(true);
+            SetResultBtnState(true);
+        }
+       
+
+        private void SetOperationBtnState(bool value)
+        {
+            bDodawanie.Enabled = value;
+           bMnozenie.Enabled = value;
+           bDzielenie.Enabled = value;
+           bOdejmowanie.Enabled = value;
+        }
+        private void OnBtnClearClick(object sender, EventArgs e)
+        {
+            tbWynik.Text = "0";
+            _firstValue = string.Empty;
+            _secondValue = string.Empty;
+            _currentOperation = Operation.None;
+        }
+        private void SetResultBtnState(bool value)
+        {
+            bWynik.Enabled = value;
+
+
+        }
+
+
     }
+
+
+
 }
